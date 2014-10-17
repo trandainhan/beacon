@@ -1,13 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MainActivity" >
-
-    <item android:id="@+id/action_find_beacon"
-        android:title="@string/action_find_beacon"
-        android:icon="@drawable/ic_action_search"
-        android:orderInCategory="100"
-        android:showAsAction="ifRoom|withText" />
-
+    tools:context="com.helios.beacon.activity.FindBeaconActivity" >
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:orderInCategory="100"
