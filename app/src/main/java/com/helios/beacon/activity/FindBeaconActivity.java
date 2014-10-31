@@ -8,24 +8,35 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.nhantran.beaconexample.R;
+import com.helios.beacon.adapter.BeaconListAdapter;
+import com.helios.beacon.model.BeaconInfo;
+import com.helios.beacon.util.Constants;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class FindBeaconActivity extends Activity implements BeaconConsumer {
 
     protected static final String TAG = "FindBeaconActivity";
     private BeaconManager beaconManager = BeaconManager.getInstanceForApplication(getApplication());
+
+    private ListView listView;
+    private List<BeaconInfo> beaconInfos = new ArrayList<BeaconInfo>();
+    private BeaconListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +47,11 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
         Log.d(TAG, "Bind");
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         beaconManager.bind(this);
+
+        listView = (ListView) findViewById(R.id.list);
+        adapter = new BeaconListAdapter(this, beaconInfos);
+        listView.setAdapter(adapter);
+
     }
 
     private void verifyBluetooth() {
@@ -101,24 +117,18 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.find_beacon, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public void onBeaconServiceConnect() {
@@ -128,10 +138,14 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
                 String msg = "I just saw an beacon for the first time!";
                 Log.d(TAG, msg);
 
-                if (region != null){
-                    Log.d(TAG, region.getId1().toString());
-                }
+                 Log.d(TAG, region.getId1().toString());
+                 Log.d(TAG, region.getId2().toString());
+                 Log.d(TAG, region.getId3().toString());
 
+
+                BeaconInfo beaconInfo = new BeaconInfo(region.getId1().toString(), "Ngu", "Ngu");
+                beaconInfos.add(beaconInfo);
+                adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -156,12 +170,14 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
             }
         });
 
+        // TODO: Change uuid ( 1244F4CC-8C7D-4D13-92F4-03DEA365EE65 )
+        // 01122334-4556-6778-899a-abbccddeeff0
         try {
-            beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
+            beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", Identifier.parse(Constants.UUID), Identifier.parse("3"), null));
         } catch (RemoteException e) {}
 
         try {
-            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
+            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", Identifier.parse(Constants.UUID), null, null));
         } catch (RemoteException e) {}
     }
 }

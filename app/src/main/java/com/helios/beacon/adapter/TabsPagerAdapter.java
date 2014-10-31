@@ -20,10 +20,8 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int i) {
         switch (i) {
             case 0:
-                // Top Rated fragment activity
                 return new OrderFragment();
             case 1:
-                // Games fragment activity
                 return new LocationFragment();
         }
 
