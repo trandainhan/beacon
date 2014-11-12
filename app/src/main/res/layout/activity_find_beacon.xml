@@ -16,4 +16,12 @@
         android:dividerHeight="1dp"
         android:listSelector="@drawable/list_row_selector" />
 
+    <TextView
+        android:id="@+id/noItemsInfo"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="@string/tv_no_iems"
+        android:gravity="center"
+        android:visibility="gone"/>
+
 </RelativeLayout>

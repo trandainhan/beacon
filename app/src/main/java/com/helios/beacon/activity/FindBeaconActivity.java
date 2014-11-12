@@ -8,7 +8,9 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.nhantran.beaconexample.R;
@@ -42,16 +44,14 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_find_beacon);
-
         verifyBluetooth();
-        Log.d(TAG, "Bind");
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         beaconManager.bind(this);
 
         listView = (ListView) findViewById(R.id.list);
+        showTextHint();
         adapter = new BeaconListAdapter(this, beaconInfos);
         listView.setAdapter(adapter);
-
     }
 
     private void verifyBluetooth() {
@@ -77,13 +77,11 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
             builder.setMessage("Sorry, this device does not support Bluetooth LE.");
             builder.setPositiveButton(android.R.string.ok, null);
             builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-
                 @Override
                 public void onDismiss(DialogInterface dialog) {
                     finish();
                     System.exit(0);
                 }
-
             });
             builder.show();
 
@@ -116,6 +114,12 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.push_right_in, R.anim.fade_out);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.find_beacon, menu);
         return true;
@@ -132,52 +136,96 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
 
     @Override
     public void onBeaconServiceConnect() {
+
         beaconManager.setMonitorNotifier(new MonitorNotifier() {
             @Override
             public void didEnterRegion(Region region) {
-                String msg = "I just saw an beacon for the first time!";
-                Log.d(TAG, msg);
 
-                 Log.d(TAG, region.getId1().toString());
-                 Log.d(TAG, region.getId2().toString());
-                 Log.d(TAG, region.getId3().toString());
-
-
-                BeaconInfo beaconInfo = new BeaconInfo(region.getId1().toString(), "Ngu", "Ngu");
-                beaconInfos.add(beaconInfo);
-                adapter.notifyDataSetChanged();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Enter beacon region", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
-            public void didExitRegion(Region region) {
-                String msg = "I no longer see an beacon";
-                Log.d(TAG, msg);
-                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-            }
+            public void didExitRegion(Region region) {}
 
             @Override
-            public void didDetermineStateForRegion(int state, Region region) {
-                Log.d(TAG, "I have just switched from seeing/not seeing beacons: " + state);
-            }
+            public void didDetermineStateForRegion(int state, Region region) {}
         });
 
         beaconManager.setRangeNotifier(new RangeNotifier() {
             @Override
-            public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+            public void didRangeBeaconsInRegion(final Collection<Beacon> beacons, Region region) {
                 if (beacons.size() > 0) {
-                    Log.d(TAG, "The first beacon I see is about "+beacons.iterator().next().getDistance()+" meters away.");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            hideTextHint();
+                            if (checkIfNumberBeaconDecreased()) return;
+
+                            for (Beacon beacon : beacons){
+                                String uuid = beacon.getId1().toString();
+                                String major = beacon.getId2().toString();
+                                String minor = beacon.getId3().toString();
+                                BeaconInfo beaconInfo = new BeaconInfo(uuid, major, minor);
+                                if (!beaconInfos.contains(beaconInfo)){
+                                    beaconInfos.add(beaconInfo);
+                                }
+                                for (BeaconInfo beaInfo: beaconInfos){
+                                    if (beaInfo.equals(beaconInfo)) {
+                                        beaInfo.setDistance(beacon.getDistance());
+                                        break;
+                                    }
+                                }
+                            }
+                            adapter.notifyDataSetChanged();
+                        }
+
+                        private boolean checkIfNumberBeaconDecreased() {
+                            if (beacons.size() < beaconInfos.size()){
+                                beaconInfos.clear();
+                                for (Beacon beacon : beacons){
+                                    BeaconInfo beaconInfo = new BeaconInfo();
+                                    beaconInfo.setUuid(beacon.getId1().toString());
+                                    beaconInfo.setMajor(beacon.getId2().toString());
+                                    beaconInfo.setMinor(beacon.getId3().toString());
+                                    beaconInfo.setDistance(beacon.getDistance());
+                                    beaconInfos.add(beaconInfo);
+                                }
+                                adapter.notifyDataSetChanged();
+                                return true;
+                            }
+                            return false;
+                        }
+                    });
+                } else {
+                    showTextHint();
                 }
             }
         });
 
-        // TODO: Change uuid ( 1244F4CC-8C7D-4D13-92F4-03DEA365EE65 )
-        // 01122334-4556-6778-899a-abbccddeeff0
         try {
-            beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", Identifier.parse(Constants.UUID), Identifier.parse("3"), null));
+            beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", Identifier.parse(Constants.UUID), null, null));
         } catch (RemoteException e) {}
 
         try {
             beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", Identifier.parse(Constants.UUID), null, null));
         } catch (RemoteException e) {}
+
     }
+
+    private void showTextHint(){
+        TextView textView = (TextView) findViewById(R.id.noItemsInfo);
+        textView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideTextHint(){
+        TextView textView = (TextView) findViewById(R.id.noItemsInfo);
+        textView.setVisibility(View.GONE);
+    }
+
 }

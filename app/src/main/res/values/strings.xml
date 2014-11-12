@@ -10,4 +10,8 @@
     <string name="btn_order">Order</string>
     <string name="title_activity_paypal">PaypalActivity</string>
 
+    <string name="tv_no_iems">No Items</string>
+    <string name="tv_no_network">Check your network and try again</string>
+    <string name="btn_retry">Retry</string>
+
 </resources>

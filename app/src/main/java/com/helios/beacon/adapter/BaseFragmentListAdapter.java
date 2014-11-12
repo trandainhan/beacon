@@ -16,6 +16,7 @@ import com.example.nhantran.beaconexample.R;
 import com.helios.beacon.application.BeaconApplication;
 import com.helios.beacon.model.Movie;
 import com.paypal.android.sdk.payments.PayPalPayment;
+import com.paypal.android.sdk.payments.PayPalPaymentDetails;
 import com.paypal.android.sdk.payments.PaymentActivity;
 
 import java.math.BigDecimal;
@@ -70,6 +71,9 @@ public class BaseFragmentListAdapter extends BaseAdapter {
             public void onClick(View view) {
                 PayPalPayment payment = new PayPalPayment(new BigDecimal("1.75"), "USD", "hipster jeans",
                         PayPalPayment.PAYMENT_INTENT_SALE);
+
+                PayPalPaymentDetails details = new PayPalPaymentDetails(new BigDecimal(100), new BigDecimal(200), new BigDecimal(300));
+                payment.paymentDetails(details);
 
                 Intent intent = new Intent(activity, PaymentActivity.class);
 

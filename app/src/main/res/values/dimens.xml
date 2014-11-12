@@ -7,4 +7,9 @@
     <dimen name="rating">15dip</dimen>
     <dimen name="genre">13dip</dimen>
     <dimen name="year">12dip</dimen>
+
+    <dimen name="uuid">17sp</dimen>
+    <dimen name="major">15sp</dimen>
+    <dimen name="minor">13sp</dimen>
+    <dimen name="distance">15sp</dimen>
 </resources>

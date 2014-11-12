@@ -53,12 +53,14 @@ public class BeaconListAdapter extends BaseAdapter{
         TextView uuid = (TextView) convertView.findViewById(R.id.uuid);
         TextView major = (TextView) convertView.findViewById(R.id.major);
         TextView minor = (TextView) convertView.findViewById(R.id.minor);
+        TextView distance = (TextView) convertView.findViewById(R.id.distance);
 
         BeaconInfo beaconInfo = data.get(position);
 
         uuid.setText(beaconInfo.getUuid());
         major.setText(beaconInfo.getMajor());
         minor.setText(beaconInfo.getMinor());
+        distance.setText(beaconInfo.getDistance());
 
         return convertView;
     }

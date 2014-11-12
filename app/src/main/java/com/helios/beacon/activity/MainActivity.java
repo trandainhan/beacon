@@ -133,7 +133,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         } else if (id == R.id.action_find_beacon) {
             Intent intent = new Intent(this, FindBeaconActivity.class);
             startActivity(intent);
-            overridePendingTransition(R.anim.push_right_in, R.anim.push_right_out);
+            overridePendingTransition(R.anim.push_right_in, R.anim.fade_out);
         }
         return super.onOptionsItemSelected(item);
     }

@@ -21,7 +21,6 @@ import com.helios.beacon.util.LruBitmapCache;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.powersave.BackgroundPowerSaver;
@@ -56,7 +55,7 @@ public class BeaconApplication extends Application implements BootstrapNotifier,
         super.onCreate();
         instance = this;
 
-        Region region = new Region("myMonitoringUniqueId", Identifier.parse("1244F4CC-8C7D-4D13-92F4-03DEA365EE65"), null, null);
+        Region region = new Region("myMonitoringUniqueId", null, null, null);
         regionBootstrap = new RegionBootstrap(this, region);
 
         BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
