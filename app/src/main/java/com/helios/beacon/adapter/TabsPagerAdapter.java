@@ -4,7 +4,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.helios.beacon.fragment.LocationFragment;
 import com.helios.beacon.fragment.OrderFragment;
 
 /**
@@ -21,8 +20,8 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
         switch (i) {
             case 0:
                 return new OrderFragment();
-            case 1:
-                return new LocationFragment();
+//            case 1:
+//                return new LocationFragment();
         }
 
         return null;
@@ -31,6 +30,6 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 2;
+        return 1;
     }
 }

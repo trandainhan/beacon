@@ -11,7 +11,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.nhantran.beaconexample.R;
 import com.helios.beacon.adapter.BeaconListAdapter;
@@ -21,7 +20,6 @@ import com.helios.beacon.util.Constants;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
@@ -45,8 +43,9 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_find_beacon);
         verifyBluetooth();
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         beaconManager.bind(this);
+        beaconManager.setForegroundScanPeriod(1000l);
+        beaconManager.setForegroundBetweenScanPeriod(10000l);
 
         listView = (ListView) findViewById(R.id.list);
         showTextHint();
@@ -108,8 +107,6 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        Log.d(TAG, "Unbind");
         beaconManager.unbind(this);
     }
 
@@ -139,15 +136,7 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
 
         beaconManager.setMonitorNotifier(new MonitorNotifier() {
             @Override
-            public void didEnterRegion(Region region) {
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(), "Enter beacon region", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
+            public void didEnterRegion(Region region) {}
 
             @Override
             public void didExitRegion(Region region) {}
@@ -159,15 +148,17 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
         beaconManager.setRangeNotifier(new RangeNotifier() {
             @Override
             public void didRangeBeaconsInRegion(final Collection<Beacon> beacons, Region region) {
-                if (beacons.size() > 0) {
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (beacons.size() > 0){
                             hideTextHint();
                             if (checkIfNumberBeaconDecreased()) return;
 
                             for (Beacon beacon : beacons){
+                                Double dis = beacon.getDistance();
+                                Log.d(TAG, dis.toString());
                                 String uuid = beacon.getId1().toString();
                                 String major = beacon.getId2().toString();
                                 String minor = beacon.getId3().toString();
@@ -183,28 +174,29 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
                                 }
                             }
                             adapter.notifyDataSetChanged();
+                        } else {
+                            // TODO:
+//                            showTextHint();
                         }
-
-                        private boolean checkIfNumberBeaconDecreased() {
-                            if (beacons.size() < beaconInfos.size()){
-                                beaconInfos.clear();
-                                for (Beacon beacon : beacons){
-                                    BeaconInfo beaconInfo = new BeaconInfo();
-                                    beaconInfo.setUuid(beacon.getId1().toString());
-                                    beaconInfo.setMajor(beacon.getId2().toString());
-                                    beaconInfo.setMinor(beacon.getId3().toString());
-                                    beaconInfo.setDistance(beacon.getDistance());
-                                    beaconInfos.add(beaconInfo);
-                                }
-                                adapter.notifyDataSetChanged();
-                                return true;
+                    }
+                    private boolean checkIfNumberBeaconDecreased() {
+                        if (beacons.size() < beaconInfos.size()){
+                            beaconInfos.clear();
+                            for (Beacon beacon : beacons){
+                                BeaconInfo beaconInfo = new BeaconInfo();
+                                beaconInfo.setUuid(beacon.getId1().toString());
+                                beaconInfo.setMajor(beacon.getId2().toString());
+                                beaconInfo.setMinor(beacon.getId3().toString());
+                                beaconInfo.setDistance(beacon.getDistance());
+                                beaconInfos.add(beaconInfo);
                             }
-                            return false;
+                            adapter.notifyDataSetChanged();
+                            return true;
                         }
-                    });
-                } else {
-                    showTextHint();
-                }
+                        return false;
+                    }
+
+                });
             }
         });
 

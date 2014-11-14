@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/major"
         android:layout_marginTop="5dp"
-        android:textColor="@color/genre"
+        android:textColor="@color/description"
         android:textSize="@dimen/minor" />
 
     <TextView

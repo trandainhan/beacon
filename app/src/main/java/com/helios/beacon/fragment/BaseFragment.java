@@ -72,6 +72,8 @@ public abstract class BaseFragment extends Fragment implements AdapterView.OnIte
 
     protected abstract void setUpData(View view);
 
+    public abstract void makeRequestData(View view, String major, String minor);
+
     protected void hideTextHint(View view){
         TextView noItemsInfo = (TextView) view.findViewById(R.id.noItemsInfo);
         RelativeLayout noNetWorkInfo = (RelativeLayout) view.findViewById(R.id.rlNetworkInfo);

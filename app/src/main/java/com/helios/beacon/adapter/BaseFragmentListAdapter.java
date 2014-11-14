@@ -2,7 +2,6 @@ package com.helios.beacon.adapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,13 +12,12 @@ import android.widget.TextView;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.example.nhantran.beaconexample.R;
+import com.helios.beacon.Dialog.QuantityPickerDialog;
 import com.helios.beacon.application.BeaconApplication;
-import com.helios.beacon.model.Movie;
-import com.paypal.android.sdk.payments.PayPalPayment;
-import com.paypal.android.sdk.payments.PayPalPaymentDetails;
-import com.paypal.android.sdk.payments.PaymentActivity;
+import com.helios.beacon.fragment.OrderFragment;
+import com.helios.beacon.model.Item;
+import com.helios.beacon.model.OrderedItem;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -29,26 +27,30 @@ import java.util.List;
 
 public class BaseFragmentListAdapter extends BaseAdapter {
 
-    private static final String TAG = BaseFragmentListAdapter.class.getSimpleName();
+    private static final String TAG = "BaseFragmentListAdapter";
 
     private Activity activity;
+    private OrderFragment fragment;
     private LayoutInflater inflater;
-    private List<Movie> movieItems;
+    private List<Item> menuItems;
     ImageLoader imageLoader = BeaconApplication.getInstance().getImageLoader();
 
-    public BaseFragmentListAdapter(Activity activity, List<Movie> movieItems) {
+    private int isFirst = 0;
+
+    public BaseFragmentListAdapter(Activity activity, OrderFragment fragment, List<Item> menuItems) {
         this.activity = activity;
-        this.movieItems = movieItems;
+        this.fragment = fragment;
+        this.menuItems = menuItems;
     }
 
     @Override
     public int getCount() {
-        return movieItems.size();
+        return menuItems.size();
     }
 
     @Override
     public Object getItem(int location) {
-        return movieItems.get(location);
+        return menuItems.get(location);
     }
 
     @Override
@@ -65,58 +67,35 @@ public class BaseFragmentListAdapter extends BaseAdapter {
         if (convertView == null)
             convertView = inflater.inflate(R.layout.fragment_base_list_row, null);
 
-        Button button = (Button) convertView.findViewById(R.id.btnOrder);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                PayPalPayment payment = new PayPalPayment(new BigDecimal("1.75"), "USD", "hipster jeans",
-                        PayPalPayment.PAYMENT_INTENT_SALE);
-
-                PayPalPaymentDetails details = new PayPalPaymentDetails(new BigDecimal(100), new BigDecimal(200), new BigDecimal(300));
-                payment.paymentDetails(details);
-
-                Intent intent = new Intent(activity, PaymentActivity.class);
-
-                intent.putExtra(PaymentActivity.EXTRA_PAYMENT, payment);
-
-                activity.startActivityForResult(intent, 0);
-            }
-        });
-
         if (imageLoader == null)
             imageLoader = BeaconApplication.getInstance().getImageLoader();
         NetworkImageView thumbNail = (NetworkImageView) convertView
                 .findViewById(R.id.thumbnail);
-        TextView title = (TextView) convertView.findViewById(R.id.title);
-        TextView rating = (TextView) convertView.findViewById(R.id.rating);
-        TextView genre = (TextView) convertView.findViewById(R.id.genre);
-        TextView year = (TextView) convertView.findViewById(R.id.releaseYear);
+        TextView title = (TextView) convertView.findViewById(R.id.name);
+        TextView description = (TextView) convertView.findViewById(R.id.description);
+        final Item item = menuItems.get(position);
+        thumbNail.setImageUrl(item.getLogoUrl(), imageLoader);
+        title.setText(item.getName());
+        description.setText(item.getDescription());
 
-        // getting movie data for the row
-        Movie m = movieItems.get(position);
 
-        // thumbnail image
-        thumbNail.setImageUrl(m.getThumbnailUrl(), imageLoader);
-
-        // title
-        title.setText(m.getTitle());
-
-        // rating
-        rating.setText("Rating: " + String.valueOf(m.getRating()));
-
-        // genre
-        String genreStr = "";
-        for (String str : m.getGenre()) {
-            genreStr += str + ", ";
-        }
-        genreStr = genreStr.length() > 0 ? genreStr.substring(0,
-                genreStr.length() - 2) : genreStr;
-        genre.setText(genreStr);
-
-        // release year
-        year.setText(String.valueOf(m.getYear()));
+        Button button = (Button) convertView.findViewById(R.id.btnOrder);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPreOrderDialog(item);
+            }
+        });
 
         return convertView;
     }
 
+    private void showPreOrderDialog(Item item){
+        QuantityPickerDialog quantityPickerDialog = new QuantityPickerDialog();
+        OrderedItem orderedItem = new OrderedItem();
+        orderedItem.setItem(item);
+        quantityPickerDialog.setOrderedItem(orderedItem);
+        quantityPickerDialog.setListener(fragment);
+        quantityPickerDialog.show(activity.getFragmentManager(), "quantityDialog");
+    };
 }

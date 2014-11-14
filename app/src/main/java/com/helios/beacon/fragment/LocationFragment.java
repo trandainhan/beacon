@@ -31,5 +31,7 @@ public class LocationFragment extends BaseFragment {
     @Override
     protected void setUpData(View view) {}
 
+    @Override
+    public void makeRequestData(View view, String major, String minor) {}
 
 }

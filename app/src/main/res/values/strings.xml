@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">BeaconExample</string>
+    <string name="app_name">DLC Solution</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_find_beacon">Find Beacon</string>
@@ -13,5 +13,10 @@
     <string name="tv_no_iems">No Items</string>
     <string name="tv_no_network">Check your network and try again</string>
     <string name="btn_retry">Retry</string>
+
+    <string name="btn_dialog_ok">Ok</string>
+    <string name="btn_dialog_cancel">Cancel</string>
+
+    <string name="msg_dialog_quantity">Quantity</string>
 
 </resources>

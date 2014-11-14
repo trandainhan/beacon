@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -62,44 +61,31 @@ public class BeaconApplication extends Application implements BootstrapNotifier,
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         beaconManager.setBackgroundScanPeriod(1100l);
         beaconManager.setBackgroundBetweenScanPeriod(10000l);
-
-        // enables auto battery saving of about 60%
-        // backgroundPowerSaver = new BackgroundPowerSaver(this);
     }
 
     @Override
-    public void didDetermineStateForRegion(int arg0, Region arg1) {
-        // Don't care
-    }
+    public void didDetermineStateForRegion(int arg0, Region arg1) {}
 
     @Override
     public void didEnterRegion(Region arg0) {
-        Log.d(TAG, "did enter region.");
         if (!haveDetectedBeaconsSinceBoot) {
-            Log.d(TAG, "auto launching MainActivity");
-
-
             Intent intent = new Intent(this, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             this.startActivity(intent);
             haveDetectedBeaconsSinceBoot = true;
         } else {
-            Log.d(TAG, "Sending notification.");
             sendNotification();
         }
 
     }
 
     @Override
-    public void didExitRegion(Region arg0) {
-        // Don't care
-        Log.d(TAG, "Did exit region");
-    }
+    public void didExitRegion(Region arg0) {}
 
     private void sendNotification() {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this)
-                        .setContentTitle("Beacon Reference Application")
+                        .setContentTitle("Beacon Solution")
                         .setContentText("An beacon is nearby.")
                         .setSmallIcon(R.drawable.ic_launcher)
                         .setAutoCancel(true);
@@ -118,9 +104,7 @@ public class BeaconApplication extends Application implements BootstrapNotifier,
     }
 
     @Override
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-        Log.d(TAG, "in Range region");
-    }
+    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {}
 
     public RequestQueue getRequestQueue() {
         if (requestQueue == null) {

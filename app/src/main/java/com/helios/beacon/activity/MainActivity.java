@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -14,15 +15,27 @@ import android.view.MenuItem;
 import com.example.nhantran.beaconexample.R;
 import com.helios.beacon.adapter.TabsPagerAdapter;
 import com.helios.beacon.fragment.BaseFragment;
+import com.helios.beacon.fragment.OrderFragment;
+import com.helios.beacon.util.Constants;
 import com.paypal.android.sdk.payments.PayPalConfiguration;
 import com.paypal.android.sdk.payments.PayPalService;
 import com.paypal.android.sdk.payments.PaymentActivity;
 import com.paypal.android.sdk.payments.PaymentConfirmation;
 
+import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconConsumer;
+import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.RangeNotifier;
+import org.altbeacon.beacon.Region;
 import org.json.JSONException;
 
+import java.util.Collection;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
+
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener, BeaconConsumer {
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     //Paypal setup
     private static final String CONFIG_ENVIRONMENT = PayPalConfiguration.ENVIRONMENT_NO_NETWORK;
@@ -34,14 +47,20 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     private ViewPager viewPager;
     private TabsPagerAdapter mAdapter;
     private ActionBar actionBar;
-
     private Menu menu;
+    private BeaconManager beaconManager = BeaconManager.getInstanceForApplication(getApplication());
 
-    private String[] tabs = {"Order", "Location"};
+    private String major = "";
+    private String minor = "";
+    private String[] tabs = {"Order"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        beaconManager.bind(this);
+        beaconManager.setForegroundScanPeriod(1000l);
+        beaconManager.setForegroundBetweenScanPeriod(20000l);
+
         setContentView(R.layout.activity_main);
 
         // Initilization
@@ -58,7 +77,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             actionBar.addTab(actionBar.newTab().setText(tab_name)
                     .setTabListener(this));
         }
-
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int i, float v, int i2) {}
@@ -75,9 +93,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         });
 
         Intent intent = new Intent(this, PayPalService.class);
-
         intent.putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, config);
-
         startService(intent);
 
     }
@@ -85,32 +101,33 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        beaconManager.unbind(this);
         stopService(new Intent(this, PayPalService.class));
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "in activity result");
         if (resultCode == Activity.RESULT_OK) {
             PaymentConfirmation confirm = data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
             if (confirm != null) {
+                Log.d(TAG, "confrim payment");
                 try {
-                    Log.i("paymentExample", confirm.toJSONObject().toString(4));
-
-                    // TODO: send 'confirm' to your server for verification.
-                    // see https://developer.paypal.com/webapps/developer/docs/integration/mobile/verify-mobile-payment/
-                    // for more details.
-
+                    Log.d(TAG, confirm.toJSONObject().toString(4));
                 } catch (JSONException e) {
-                    Log.e("paymentExample", "an extremely unlikely failure occurred: ", e);
+                    Log.e(TAG, e.getMessage());
                 }
+                sendOrderConfirmReq();
             }
         }
         else if (resultCode == Activity.RESULT_CANCELED) {
-            Log.i("paymentExample", "The user canceled.");
+            Log.d(TAG, "Payment cancel");
         }
-        else if (resultCode == PaymentActivity.RESULT_EXTRAS_INVALID) {
-            Log.i("paymentExample", "An invalid Payment or PayPalConfiguration was submitted. Please see the docs.");
-        }
+        else if (resultCode == PaymentActivity.RESULT_EXTRAS_INVALID) {}
+    }
+
+    private void sendOrderConfirmReq(){
+
     }
 
     @Override
@@ -148,4 +165,49 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
     @Override
     public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {}
+
+    @Override
+    public void onBeaconServiceConnect() {
+
+        beaconManager.setRangeNotifier(new RangeNotifier() {
+            @Override
+            public void didRangeBeaconsInRegion(final Collection<Beacon> beacons, Region region) {
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (beacons.size() > 0) {
+                            for (Beacon beacon : beacons){
+                                String major = beacon.getId2().toString();
+                                String minor = beacon.getId3().toString();
+                                if (!major.equalsIgnoreCase(getMajor()) || !minor.equalsIgnoreCase(getMinor())){
+                                    BaseFragment fragment = (OrderFragment) getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + 0);
+                                    fragment.makeRequestData(fragment.getView(), major, minor);
+                                    setMajorMinor(major, minor);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        try {
+            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", Identifier.parse(Constants.UUID), null, null));
+        } catch (RemoteException e) {}
+
+    }
+
+    public void setMajorMinor(String major, String minor){
+        this.major = major;
+        this.minor = minor;
+    }
+
+    public String getMajor(){
+        return this.major;
+    }
+    public String getMinor(){
+        return this.minor;
+    }
 }
