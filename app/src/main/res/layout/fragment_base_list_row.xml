@@ -23,24 +23,22 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:layout_below="@+id/name"
+        android:textSize="@dimen/price"/>
+
+    <TextView
         android:id="@+id/description"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/name"
+        android:layout_below="@id/price"
         android:layout_marginTop="5dp"
         android:layout_toRightOf="@+id/thumbnail"
         android:layout_toLeftOf="@+id/btnOrder"
         android:textColor="@color/description"
-        android:textSize="@dimen/genre" />
-
-    <Button
-        android:id="@+id/btnOrder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:text="@string/btn_order" />
+        android:textSize="@dimen/description" />
 
 </RelativeLayout>

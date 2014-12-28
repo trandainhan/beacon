@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.NumberPicker;
 
 import com.example.nhantran.beaconexample.R;
@@ -55,9 +56,11 @@ public class QuantityPickerDialog extends DialogFragment implements NumberPicker
         NumberPicker numberPicker = (NumberPicker) dialogView.findViewById(R.id.numberPicker);
         numberPicker.setMaxValue(30);
         numberPicker.setMinValue(1);
+        numberPicker.setValue(1);
         numberPicker.setOnValueChangedListener(this);
+        numberPicker.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
         builder.setView(dialogView)
-                .setTitle("Choose quantity")
+                .setTitle("Pick number you want order!")
                 .setPositiveButton(R.string.btn_dialog_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {

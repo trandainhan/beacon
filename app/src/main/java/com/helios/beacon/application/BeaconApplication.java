@@ -60,7 +60,7 @@ public class BeaconApplication extends Application implements BootstrapNotifier,
         BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         beaconManager.setBackgroundScanPeriod(1100l);
-        beaconManager.setBackgroundBetweenScanPeriod(10000l);
+        beaconManager.setBackgroundBetweenScanPeriod(1000l);
     }
 
     @Override
@@ -76,7 +76,6 @@ public class BeaconApplication extends Application implements BootstrapNotifier,
         } else {
             sendNotification();
         }
-
     }
 
     @Override

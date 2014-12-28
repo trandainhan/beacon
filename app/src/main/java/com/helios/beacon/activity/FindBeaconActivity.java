@@ -1,10 +1,12 @@
 package com.helios.beacon.activity;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,8 +46,11 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
         setContentView(R.layout.activity_find_beacon);
         verifyBluetooth();
         beaconManager.bind(this);
-        beaconManager.setForegroundScanPeriod(1000l);
-        beaconManager.setForegroundBetweenScanPeriod(10000l);
+        beaconManager.setForegroundScanPeriod(2000l);
+        beaconManager.setForegroundBetweenScanPeriod(500l);
+
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         listView = (ListView) findViewById(R.id.list);
         showTextHint();
@@ -126,6 +131,10 @@ public class FindBeaconActivity extends Activity implements BeaconConsumer {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
+            return true;
+        } else if (id == android.R.id.home){
+            NavUtils.navigateUpFromSameTask(this);
+            overridePendingTransition(R.anim.push_right_in, R.anim.fade_out);
             return true;
         }
         return super.onOptionsItemSelected(item);

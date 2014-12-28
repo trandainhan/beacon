@@ -6,13 +6,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.nhantran.beaconexample.R;
 import com.helios.beacon.Dialog.QuantityPickerDialog;
 import com.helios.beacon.activity.MainActivity;
+import com.helios.beacon.activity.OrderActivity;
 import com.helios.beacon.adapter.BaseFragmentListAdapter;
 import com.helios.beacon.application.BeaconApplication;
 import com.helios.beacon.model.Item;
@@ -20,7 +23,7 @@ import com.helios.beacon.model.OrderedItem;
 import com.helios.beacon.util.Constants;
 import com.paypal.android.sdk.payments.PayPalItem;
 import com.paypal.android.sdk.payments.PayPalPayment;
-import com.paypal.android.sdk.payments.PaymentActivity;
+import com.paypal.android.sdk.payments.PayPalPaymentDetails;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,7 +34,7 @@ import java.util.List;
 
 public class OrderFragment extends BaseFragment implements QuantityPickerDialog.NoticeDialogListener {
 
-    private static final String TAG = "OrderFragment";
+    private static final String TAG = OrderFragment.class.getSimpleName();
 
     private List<Item> menuList = new ArrayList<Item>();
 
@@ -89,6 +92,13 @@ public class OrderFragment extends BaseFragment implements QuantityPickerDialog.
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(), "Can not make network request!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                hideProgressDialog();
             }
         });
 
@@ -97,53 +107,39 @@ public class OrderFragment extends BaseFragment implements QuantityPickerDialog.
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Object obj = adapterView.getItemAtPosition(i);
-        // TODO: with object
+        Item item = menuList.get(i);
+        OrderedItem orderedItem = new OrderedItem();
+        orderedItem.setItem(item);
+        Intent intent = new Intent(getActivity(), OrderActivity.class);
+        intent.putExtra("orderItem", orderedItem);
+        intent.putExtra("major", ((MainActivity)getActivity()).getMajor());
+        intent.putExtra("minor", ((MainActivity)getActivity()).getMinor());
+        startActivity(intent);
+        getActivity().overridePendingTransition(R.anim.push_right_in, R.anim.fade_out);
     }
 
     @Override
     public void onClick(View v) {
         showDialog();
-//        makeRequestData(view, );s
     }
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
         QuantityPickerDialog quantityPickerDialog = (QuantityPickerDialog) dialog;
-        makeRequestOrder(quantityPickerDialog.getOrderedItem());
     }
 
-    private void makeRequestOrder(final OrderedItem orderedItem) {
-        MainActivity activity = (MainActivity) getActivity();
-        String major = activity.getMajor();
-        String minor = activity.getMinor();
-        String url = Constants.RESTAURANT_ORDER_URL;
-        url = url.replace("majorValue", major);
-        url = url.replace("minorValue", minor);
-        String data = "[" + orderedItem.toString() + "]";
-        url = url.replace("dataValue", data);
-        JsonObjectRequest orderReq = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-                PayPalPayment payment = new PayPalPayment(new BigDecimal(5), Constants.CURRENCY, orderedItem.getItem().getName(),
-                        PayPalPayment.PAYMENT_INTENT_SALE);
-                PayPalItem[] payPalItems = {new PayPalItem(orderedItem.getItem().getName(), orderedItem.getQuantity(), new BigDecimal(orderedItem.getItem().getPrice()), Constants.CURRENCY, Constants.DEFAUT_SKU)};
-                payment.items(payPalItems);
-
-                Intent intent = new Intent(getActivity(), PaymentActivity.class);
-                intent.putExtra(PaymentActivity.EXTRA_PAYMENT, payment);
-                getActivity().startActivityForResult(intent, Constants.REQUEST_CODE_PAYMENT);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        });
-        BeaconApplication.getInstance().addToRequestQueue(orderReq);
-
+    private PayPalPayment getStuffToBuy(OrderedItem orderedItem) {
+        PayPalItem[] payPalItems = {new PayPalItem(orderedItem.getItem().getName(), orderedItem.getQuantity(), orderedItem.getTotalPrice(), Constants.CURRENCY_USD, Constants.DEFAULT_SKU)};
+        BigDecimal subtotal = PayPalItem.getItemTotal(payPalItems);
+        BigDecimal shipping = new BigDecimal("0");
+        BigDecimal tax = new BigDecimal("0");
+        PayPalPaymentDetails paymentDetails = new PayPalPaymentDetails(shipping, subtotal, tax);
+        BigDecimal amount = subtotal.add(shipping).add(tax);
+        PayPalPayment payment = new PayPalPayment(amount, Constants.CURRENCY_USD, orderedItem.getItem().getName(),
+                PayPalPayment.PAYMENT_INTENT_SALE);
+        payment.items(payPalItems).paymentDetails(paymentDetails);
+        payment.custom("This is text that will be associated with the payment that the app can use.");
+        return payment;
     }
 
     @Override

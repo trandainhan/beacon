@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
@@ -17,6 +16,7 @@ import com.helios.beacon.application.BeaconApplication;
 import com.helios.beacon.fragment.OrderFragment;
 import com.helios.beacon.model.Item;
 import com.helios.beacon.model.OrderedItem;
+import com.helios.beacon.util.Constants;
 
 import java.util.List;
 
@@ -73,19 +73,12 @@ public class BaseFragmentListAdapter extends BaseAdapter {
                 .findViewById(R.id.thumbnail);
         TextView title = (TextView) convertView.findViewById(R.id.name);
         TextView description = (TextView) convertView.findViewById(R.id.description);
+        TextView price = (TextView) convertView.findViewById(R.id.price);
         final Item item = menuItems.get(position);
         thumbNail.setImageUrl(item.getLogoUrl(), imageLoader);
         title.setText(item.getName());
         description.setText(item.getDescription());
-
-
-        Button button = (Button) convertView.findViewById(R.id.btnOrder);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showPreOrderDialog(item);
-            }
-        });
+        price.setText(item.getPrice().toString() + " " + Constants.CURRENCY_VND);
 
         return convertView;
     }
